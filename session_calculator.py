@@ -7,10 +7,10 @@ import json
 import datetime
 import operator
 
-#connection_mysql = pymysql.connect(host='localhost', user='*#*', db='Greedy_Game', password='*#*',init_command='SET NAMES UTF8')   #local mysql connection to store the user session data into mysql 
+connection_mysql = pymysql.connect(host='localhost', user='*#*', db='Greedy_Game', password='*#*',init_command='SET NAMES UTF8')   #local mysql connection to store the user session data into mysql 
 
 
-#cursor_mysql = connection_mysql.cursor()  #mysql cursor
+cursor_mysql = connection_mysql.cursor()  #mysql cursor
 
 
 class Event_Headers:
@@ -108,13 +108,18 @@ def user_session_calculator(user_ins):                              #function to
 	    if count==len(instances):
 		if start_session_instance is not None and instance.post.event == "ggstop":
 			session_time=instance.bottle.timestamp_in_seconds-start_session_instance.bottle.timestamp_in_seconds
-		if session_time >= 60:
-		    #print(session_time)
-                    valid_sessions += 1
-                    total_time += session_time
-                
-                if session_time > 1:
-                    total_sessions += 1
+			if session_time >= 60:
+			    #print(session_time)
+		            valid_sessions += 1
+		            total_time += session_time
+		        
+		        if session_time > 1:
+		            total_sessions += 1
+			if valid_sessions !=0:
+            		    average_session_time= total_time/valid_sessions
+            		else:
+                	    average_session_time=0                	
+			continue
 	    if flag:
                 if instance.post.event == "ggstart":
                     prev_session_instance = start_session_instance = instance
@@ -154,7 +159,7 @@ def user_session_calculator(user_ins):                              #function to
 
 def json_read():                                   #function to read the input JSON file
     user_dict = {}                                  #dictionary declaration to store user events as a key value pair
-    with open('/home/vivek/Desktop/Greedy_Game_Assignment/samplegg.log') as f:      #file opening statement from given location
+    with open('/home/vivek/Desktop/Greedy_Game_Assignment/ggevent.log') as f:      #file opening statement from given location
         json_data = f.readlines()
     
     for line in json_data:
@@ -182,12 +187,14 @@ if __name__ == '__main__':
 
 	user_event_info = json_read()                                  #calling read_json function to read the input log file (json format) 
 	user_sessions_info = user_session_calculator(user_event_info)            #calling the user_session_calculator method to calculate totalsession,validsession,avg session of each user by giving user's event history as input
-	with open('session_calculation_output_vivek.txt', "w") as f:
+	
+
+	with open('session_calculation_output.txt', "w") as f:         # writing the session calculation output to a text file 
 		for i in user_sessions_info:
 		    #print(session)
 		    f.write(i.to_json() + "\n")
 	
-	with open('/home/vivek/Desktop/Greedy_Game_Assignment/session_calculation_output_vivek.txt', 'r') as f:
+	with open('/home/vivek/Desktop/Greedy_Game_Assignment/session_calculation_output.txt', 'r') as f:   #stroring session details to mysql
 	    for line in f:
 		user_info=json.loads(line)
 		#print(a)
